@@ -1,103 +1,88 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 class Program
 {
-    static void Main()
+    static void FirstThread(string filename)
     {
-        while (true)
+        string data = File.ReadAllText(filename);
+        Console.WriteLine("Data from file '" + filename + "': " + data);
+    }
+
+    static void SecondThread(int n, ref int result)
+    {
+        result = CalculateFactorial(n);
+    }
+
+    static int CalculateFactorial(int n)
+    {
+        int result = 1;
+        for (int i = 2; i <= n; ++i)
         {
-            Console.WriteLine("Menu:");
-            Console.WriteLine("1. 'Lorem ipsum'");
-            Console.WriteLine("2. Calculator");
-            Console.WriteLine("0. Exit");
+            result *= i;
+        }
+        return result;
+    }
 
-            Console.Write("Choose 0 - 2: ");
-            string choice = Console.ReadLine();
-
-            switch (choice)
-            {
-                case "1":
-                    Console.Write("Enter number of words in text: ");
-                    int wordCount = int.Parse(Console.ReadLine());
-                    DisplayWordsInLoremIpsum(wordCount);
-                    break;
-                case "2":
-                    PerformMathOperation();
-                    break;
-                case "0":
-                    Environment.Exit(0);
-                    break;
-                default:
-                    Console.WriteLine("Wrong choice. Try again.");
-                    break;
-            }
-
-            Console.WriteLine();
+    static void ThirdThread(string message, int durationInSeconds)
+    {
+        for (int i = 1; i <= durationInSeconds; ++i)
+        {
+            Console.WriteLine(message + " - " + i);
+            Thread.Sleep(1000);
         }
     }
 
-    static void DisplayWordsInLoremIpsum(int wordCount)
+    static async Task FirstAsync(string filename)
     {
-        string loremIpsumText = ReadTextFromFile("C:\\Users\\User\\source\\repos\\ConsoleApp1\\ConsoleApp1\\Lorem.txt");
-        string[] words = loremIpsumText.Split(new char[] { ' ', '\t', '\n', '\r' });
+        string data = await File.ReadAllTextAsync(filename);
+        Console.WriteLine("Data from file '" + filename + "': " + data);
+    }
 
-        if (wordCount <= words.Length)
+    static async Task<int> SecondAsync(int n)
+    {
+        return await Task.Run(() => CalculateFactorial(n));
+    }
+
+    static async Task ThirdAsync(string message, int durationInSeconds)
+    {
+        for (int i = 1; i <= durationInSeconds; ++i)
         {
-            Console.WriteLine($"first {wordCount} words 'Lorem ipsum':");
-            for (int i = 0; i < wordCount; i++)
-            {
-                Console.Write($"{words[i]} ");
-            }
-            Console.WriteLine();
-        }
-        else
-        {
-            Console.WriteLine($"Text 'Lorem ipsum' Contains less words than ({wordCount}).");
+            Console.WriteLine(message + " - " + i);
+            await Task.Delay(1000);
         }
     }
 
-    static void PerformMathOperation()
+    static async Task Main()
     {
-        Console.Write("Enter first number ");
-        double number1 = double.Parse(Console.ReadLine());
+        Console.WriteLine("Start of first Thread\n");
+        Thread thread1 = new Thread(() => FirstThread("Lorem.txt"));
+        thread1.Start();
+        thread1.Join();
+        Console.WriteLine("\nEnd of first Thread\n");
 
-        Console.Write("Enter second number: ");
-        double number2 = double.Parse(Console.ReadLine());
+        Console.WriteLine("Start of second Thread\n");
+        int result = 1;
+        Thread thread2 = new Thread(() => SecondThread(10, ref result));
+        thread2.Start();
+        thread2.Join();
+        Console.WriteLine("Factorial of 10 = " + result);
+        Console.WriteLine("\nEnd of second Thread\n");
 
-        Console.Write("Enter math operation (+, -, *, /): ");
-        string operation = Console.ReadLine();
+        Console.WriteLine("Start of third Thread\n");
+        Thread thread3 = new Thread(() => ThirdThread("This message will repeat -", 5));
+        thread3.Start();
+        thread3.Join();
+        Console.WriteLine("\nEnd of third Thread\n");
 
-        double result;
+        Console.WriteLine("Start of first Async\n");
+        await FirstAsync("Lorem.txt");
 
-        switch (operation)
-        {
-            case "+":
-                result = number1 + number2;
-                break;
-            case "-":
-                result = number1 - number2;
-                break;
-            case "*":
-                result = number1 * number2;
-                break;
-            case "/":
-                result = number1 / number2;
-                break;
-            default:
-                Console.WriteLine("\nError.");
-                return;
-        }
-        Console.WriteLine($"Result: {result}");
-    }
+        int resultAsync = await SecondAsync(10);
+        Console.WriteLine("Second Async result = " + resultAsync);
 
-    static string ReadTextFromFile(string filePath)
-    {
-        if (File.Exists(filePath))
-        {
-            return File.ReadAllText(filePath);
-        }
-        else { return "File not found"; }
-            
+        await ThirdAsync("This message will repeat async - ", 5);
     }
 }
