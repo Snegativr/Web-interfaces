@@ -1,103 +1,75 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Reflection;
 
 class Program
 {
-    static void Main()
-    {
-        while (true)
+    public class CivilAviation {
+        private string aircraftName;
+        public string flightNumber;
+        public DateTime departureTime;
+        protected string destination;
+        internal double ticketPrice;
+        protected internal int passangerCapacity;
+        private float maxWeight;
+
+        public CivilAviation(string aircraftName, string flightNumber, DateTime departureTime, string destination, double ticketPrice, int passengerCapacity,float maxWeight)
         {
-            Console.WriteLine("Menu:");
-            Console.WriteLine("1. 'Lorem ipsum'");
-            Console.WriteLine("2. Calculator");
-            Console.WriteLine("0. Exit");
+            this.aircraftName = aircraftName;
+            this.flightNumber = flightNumber;
+            this.departureTime = departureTime;
+            this.destination = destination;
+            this.ticketPrice = ticketPrice;
+            this.passangerCapacity = passengerCapacity;
+            this.maxWeight = maxWeight;
+        }
 
-            Console.Write("Choose 0 - 2: ");
-            string choice = Console.ReadLine();
-
-            switch (choice)
-            {
-                case "1":
-                    Console.Write("Enter number of words in text: ");
-                    int wordCount = int.Parse(Console.ReadLine());
-                    DisplayWordsInLoremIpsum(wordCount);
-                    break;
-                case "2":
-                    PerformMathOperation();
-                    break;
-                case "0":
-                    Environment.Exit(0);
-                    break;
-                default:
-                    Console.WriteLine("Wrong choice. Try again.");
-                    break;
-            }
-
-            Console.WriteLine();
+        public bool IsMaxWeightExceeded(float avgPassangerWeight, int numOfPassangers, float avgLuggageWeight,int numOfLuggage) {
+            float total = (avgPassangerWeight * numOfPassangers) + (avgLuggageWeight * numOfLuggage);
+            bool isMaxWeightExceeded = maxWeight > total;
+            return isMaxWeightExceeded;
+        }
+        public int GetAvailableSeats(int numOfPassengers)
+        {
+            return passangerCapacity - numOfPassengers;
+        }
+        public double GetTotalCost(int numOfPassengers)
+        {
+            return ticketPrice * numOfPassengers;
         }
     }
 
-    static void DisplayWordsInLoremIpsum(int wordCount)
+
+    static async Task Main()
     {
-        string loremIpsumText = ReadTextFromFile("C:\\Users\\User\\source\\repos\\ConsoleApp1\\ConsoleApp1\\Lorem.txt");
-        string[] words = loremIpsumText.Split(new char[] { ' ', '\t', '\n', '\r' });
+        CivilAviation air1 = new CivilAviation("Boeing 737", "BA123", new DateTime(2024, 2, 28, 8, 0, 0), "London", 250.50, 200, 15000.0f);
+        Type type1 = typeof(CivilAviation);
+        TypeInfo typeInfo1 = type1.GetTypeInfo();
+        Console.WriteLine(type1);
+        Console.WriteLine(typeInfo1 + "\n");
 
-        if (wordCount <= words.Length)
+        MemberInfo[] members = type1.GetMembers();
+        foreach (MemberInfo member in members)
         {
-            Console.WriteLine($"first {wordCount} words 'Lorem ipsum':");
-            for (int i = 0; i < wordCount; i++)
-            {
-                Console.Write($"{words[i]} ");
-            }
-            Console.WriteLine();
+            Console.WriteLine($"Member name: {member.Name}, Member type: {member.MemberType}");
         }
-        else
+
+        Console.WriteLine("\n");
+
+        FieldInfo[] fields = type1.GetFields();
+        foreach (FieldInfo field in fields)
         {
-            Console.WriteLine($"Text 'Lorem ipsum' Contains less words than ({wordCount}).");
+            Console.WriteLine($"Field name: {field.Name}, Field type: {field.FieldType}");
         }
-    }
 
-    static void PerformMathOperation()
-    {
-        Console.Write("Enter first number ");
-        double number1 = double.Parse(Console.ReadLine());
+        Console.WriteLine("\n");
 
-        Console.Write("Enter second number: ");
-        double number2 = double.Parse(Console.ReadLine());
+        MethodInfo methodInfo = type1.GetMethod("IsMaxWeightExceeded");
+        Console.WriteLine(methodInfo);
 
-        Console.Write("Enter math operation (+, -, *, /): ");
-        string operation = Console.ReadLine();
-
-        double result;
-
-        switch (operation)
-        {
-            case "+":
-                result = number1 + number2;
-                break;
-            case "-":
-                result = number1 - number2;
-                break;
-            case "*":
-                result = number1 * number2;
-                break;
-            case "/":
-                result = number1 / number2;
-                break;
-            default:
-                Console.WriteLine("\nError.");
-                return;
-        }
-        Console.WriteLine($"Result: {result}");
-    }
-
-    static string ReadTextFromFile(string filePath)
-    {
-        if (File.Exists(filePath))
-        {
-            return File.ReadAllText(filePath);
-        }
-        else { return "File not found"; }
-            
+        object[] args = new object[] {60.3f,100,20.1f,100};
+        Console.WriteLine(methodInfo.Invoke(air1, args));
     }
 }
