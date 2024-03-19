@@ -9,7 +9,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// ¬икористано AddSingleton, оск≥льки нам потр≥бен лише один екземпл€р серв≥су прот€гом життЇвого циклу додатка.
+// AddSingleton is used because we only need one instance of the service during the application's life cycle.
 builder.Services.AddSingleton<ITweetService, TweetService>();
 builder.Services.AddSingleton<IUserService, UserService>();
 builder.Services.AddSingleton<IHashtagService, HashtagService>();
